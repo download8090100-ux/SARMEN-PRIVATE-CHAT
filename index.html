@@ -3,281 +3,478 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SARMEN PRIVATE CHAT</title>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SARMEN PRIVATE</title>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
 
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;background:#080808;color:white;
- font-family:Tahoma,Arial,sans-serif;
+  margin:0;background:#090b10;color:#eee;
+  font-family:Tahoma,Arial,sans-serif;
+  min-height:100vh;display:flex;justify-content:center;
+  align-items:center;padding:15px
 }
-.app{
- width:100%;max-width:520px;margin:auto;
- min-height:100vh;padding:20px;
+.container{
+  width:100%;max-width:520px;background:#121722;
+  border:1px solid #293243;border-radius:20px;
+  padding:22px;box-shadow:0 15px 50px #0008
 }
-header{text-align:center;padding:22px}
-.logo{font-size:32px;color:#ff2424;font-weight:bold;letter-spacing:4px}
-.sub{font-size:11px;color:#777;margin-top:9px}
-.panel{
- background:#151515;border:1px solid #333;
- border-radius:14px;padding:17px;margin-bottom:15px;
+h1{text-align:center;color:#e63946;letter-spacing:3px}
+.subtitle{text-align:center;color:#8994a7;font-size:13px;margin-bottom:25px}
+input,button{
+  width:100%;padding:14px;border-radius:10px;
+  border:1px solid #303b4e;background:#0b1019;
+  color:white;font-size:15px;margin-top:10px
 }
-h3{margin-top:0;color:#ff3535}
-input{
- width:100%;padding:14px;margin:7px 0;
- border:1px solid #393939;border-radius:8px;
- background:#090909;color:white;font-size:15px;
+button{background:#b51f30;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+.secondary{background:#29364a}
+.green{background:#167b55}
+.status{
+  background:#0b1019;padding:13px;border-radius:10px;
+  color:#aab5c7;font-size:13px;margin:15px 0;
+  text-align:center;line-height:1.8
 }
-button{
- border:0;border-radius:9px;padding:14px;
- background:#d71920;color:white;font-size:15px;
- font-weight:bold;cursor:pointer;
-}
-button:disabled{opacity:.4}
-.full{width:100%;margin-top:9px}
-.secondary{background:#303030}
-.green{background:#146d43}
-.status{text-align:center;color:#aaa;font-size:12px;padding:8px}
 #chatPanel{display:none}
-#messages{
- height:310px;overflow:auto;background:#090909;
- border:1px solid #303030;border-radius:10px;
- padding:10px;
+.messages{
+  height:320px;overflow-y:auto;background:#090e17;
+  border:1px solid #263144;border-radius:12px;
+  padding:12px;margin:15px 0
 }
-.msg{
- background:#292929;padding:11px;
- margin:8px 0;border-radius:10px;
- overflow-wrap:anywhere;
+.message{margin:10px 0;display:flex;flex-direction:column}
+.message .who{font-size:11px;color:#e65b67;margin-bottom:4px}
+.message .bubble{
+  background:#202c3d;padding:10px 13px;
+  border-radius:12px;max-width:85%;overflow-wrap:anywhere
 }
-.mine{background:#641818;text-align:left}
-.controls{display:flex;gap:8px}
-.controls button{flex:1}
-.footer{text-align:center;color:#555;font-size:10px;padding:20px}
+.message.mine{align-items:flex-start}
+.message.mine .bubble{background:#8e2634}
+.sendrow{display:flex;gap:8px}
+.sendrow input{flex:1;min-width:0}
+.sendrow button{width:85px;flex-shrink:0}
+.callbox{
+  border:1px solid #303b4e;border-radius:12px;
+  padding:15px;margin-top:15px;text-align:center
+}
+.callbox button{margin-top:8px}
+#answerBtn,#playAudioBtn{display:none}
+.small{font-size:11px;color:#778398;text-align:center;margin-top:18px}
 </style>
 </head>
 
 <body>
-<div class="app">
+<div class="container">
 
-<header>
- <div class="logo">SARMEN</div>
- <div class="sub">PRIVATE CHAT & VOICE CALL</div>
-</header>
+  <h1>SARMEN</h1>
+  <div class="subtitle">PRIVATE CHAT & VOICE CALL</div>
 
-<div class="panel" id="connectPanel">
- <h3>ورود به اتاق خصوصی</h3>
- <input id="room" placeholder="کد اتاق مشترک">
- <button class="full" onclick="connectRoom()">ورود به اتاق</button>
- <div class="status" id="status">آماده اتصال</div>
- <div class="status">هر دو نفر باید دقیقاً یک کد اتاق وارد کنند.</div>
-</div>
-
-<div id="chatPanel">
- <div class="panel">
-  <h3>وضعیت ارتباط</h3>
-  <div class="status" id="connectionStatus">در انتظار اتصال طرف مقابل</div>
-  <div class="controls">
-   <button id="callBtn" onclick="startCall()" disabled>تماس صوتی</button>
-   <button class="secondary" onclick="endCall()">قطع تماس</button>
+  <div id="loginPanel">
+    <input id="username" value="movsesian" placeholder="نام کاربری">
+    <input id="password" type="movsesianarsine" placeholder="رمز عبور">
+    <button id="loginBtn" onclick="login()">ورود به سایت</button>
+    <div class="small">SARMEN PRIVATE CONNECTION</div>
   </div>
-  <audio id="remoteAudio" autoplay playsinline></audio>
-  <div class="status" id="callStatus">تماس برقرار نشده</div>
-  <button class="full secondary" id="muteBtn" onclick="toggleMute()" disabled>قطع میکروفون</button>
- </div>
 
- <div class="panel">
-  <h3>پیام‌ها</h3>
-  <div id="messages">
-   <div class="status">به SARMEN خوش آمدید</div>
+  <div id="chatPanel">
+    <div class="status" id="status">در حال آماده‌سازی اتصال...</div>
+
+    <div class="messages" id="messages"></div>
+
+    <div class="sendrow">
+      <input id="messageInput" placeholder="پیام خود را بنویسید..." disabled>
+      <button id="sendBtn" onclick="sendMessage()" disabled>ارسال</button>
+    </div>
+
+    <div class="callbox">
+      <div style="font-weight:bold;margin-bottom:8px">تماس صوتی دوطرفه</div>
+      <div id="callStatus" class="small">آماده تماس</div>
+
+      <button id="callBtn" class="green" onclick="startCall()" disabled>
+        شروع تماس صوتی
+      </button>
+
+      <button id="answerBtn" onclick="answerCall()">
+        پاسخ به تماس
+      </button>
+
+      <button id="hangupBtn" class="secondary" onclick="hangup()" disabled>
+        قطع تماس
+      </button>
+
+      <audio id="remoteAudio" autoplay playsinline></audio>
+      <button id="playAudioBtn" class="secondary" onclick="playRemoteAudio()">
+        پخش صدای طرف مقابل
+      </button>
+    </div>
+
+    <button class="secondary" onclick="logout()">خروج از حساب</button>
   </div>
-  <input id="message" placeholder="پیام خود را بنویسید..."
-   onkeydown="if(event.key==='Enter')sendMessage()">
-  <button class="full" onclick="sendMessage()">ارسال پیام</button>
- </div>
 
- <button class="full secondary" onclick="leaveRoom()">خروج از اتاق</button>
-</div>
-
-<div class="footer">SARMEN © 2026</div>
 </div>
 
 <script>
-let peer=null;
-let conn=null;
-let currentCall=null;
-let localStream=null;
-let muted=false;
-let otherPeer=null;
-let roomCode="";
+// فقط این دو خط را تنظیم کن
+const USERNAME = "movsesian";
+const PASSWORD = "CHANGE_THIS_PASSWORD";
 
-const $=id=>document.getElementById(id);
-
-function setStatus(t){$("status").textContent=t}
-
-function addMessage(t,mine){
- const d=document.createElement("div");
- d.className="msg"+(mine?" mine":"");
- d.textContent=t;
- $("messages").appendChild(d);
- $("messages").scrollTop=$("messages").scrollHeight;
+// شناسه‌های داخلی اتصال؛ در صفحه نمایش داده نمی‌شوند
+function hashString(str){
+  let h = 2166136261;
+  for(let i=0;i<str.length;i++){
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h,16777619);
+  }
+  return (h>>>0).toString(36);
 }
 
-function connectRoom(){
- roomCode=$("room").value.trim();
+const token = hashString(USERNAME.toLowerCase()+"|"+PASSWORD);
+const hostId = "sm-"+token+"-h";
+const guestId = "sm-"+token+"-g";
 
- if(!/^[a-zA-Z0-9_-]{3,30}$/.test(roomCode)){
-  setStatus("کد اتاق باید حداقل ۳ حرف یا عدد باشد");
-  return;
- }
+let peer = null;
+let role = null;
+let dataConn = null;
+let connecting = false;
+let retryTimer = null;
+let localStream = null;
+let currentCall = null;
+let pendingCall = null;
 
- $("connectPanel").style.display="none";
- $("chatPanel").style.display="block";
- setStatus("در حال اتصال...");
+const $ = id => document.getElementById(id);
 
- // اتاق از طریق یک شناسه مشترک ساخته می‌شود.
- const myId="sarmen-"+roomCode+"-"+Math.random().toString(36).slice(2,10);
- peer=new Peer(myId);
-
- peer.on("open",()=>{
-  $("connectionStatus").textContent="شناسه شما آماده است";
-  $("callBtn").disabled=false;
-  $("callStatus").textContent="برای تماس، طرف مقابل باید شناسه خود را به شما بدهد";
- });
-
- peer.on("connection",c=>{
-  conn=c;
-  setupConnection();
- });
-
- peer.on("call",call=>{
-  currentCall=call;
-  answerIncomingCall();
- });
-
- peer.on("error",e=>{
-  $("connectionStatus").textContent="خطا: "+e.type;
- });
-
- $("connectionStatus").textContent=
- "شناسه شما: "+myId;
+function setStatus(text){
+  $("status").textContent = text;
 }
 
-function setupConnection(){
- if(!conn)return;
+function login(){
+  const u = $("username").value.trim().toLowerCase();
+  const p = $("password").value;
 
- conn.on("open",()=>{
-  $("connectionStatus").textContent="چت متصل شد";
- });
+  if(u !== USERNAME.toLowerCase() || p !== PASSWORD){
+    alert("نام کاربری یا رمز عبور اشتباه است");
+    return;
+  }
 
- conn.on("data",data=>{
-  if(data.type==="message")addMessage("دوست: "+data.text,false);
- });
+  $("loginPanel").style.display = "none";
+  $("chatPanel").style.display = "block";
 
- conn.on("close",()=>{
-  $("connectionStatus").textContent="ارتباط قطع شد";
- });
+  setStatus("در حال اتصال به سرور...");
+  startPeer("host");
+}
+
+function startPeer(wantedRole){
+  role = wantedRole;
+  const myId = role === "host" ? hostId : guestId;
+
+  try{
+    peer = new Peer(myId,{
+      debug:1,
+      config:{
+        iceServers:[
+          {urls:"stun:stun.l.google.com:19302"}
+        ]
+      }
+    });
+  }catch(e){
+    setStatus("خطا در ساخت اتصال: "+e.message);
+    return;
+  }
+
+  peer.on("open",()=>{
+    if(role === "host"){
+      setStatus("سایت آماده است؛ منتظر اتصال گوشی دوم...");
+    }else{
+      setStatus("در حال پیدا کردن گوشی اول...");
+      connectToHost();
+      retryTimer = setInterval(connectToHost,4000);
+    }
+
+    $("callBtn").disabled = false;
+  });
+
+  peer.on("error",err=>{
+    console.log("Peer error:",err.type,err);
+
+    if(err.type === "unavailable-id" && role === "host"){
+      peer.destroy();
+      peer = null;
+      setStatus("در حال اتصال گوشی دوم...");
+      setTimeout(()=>startPeer("guest"),700);
+      return;
+    }
+
+    if(err.type === "unavailable-id" && role === "guest"){
+      setStatus("هر دو جایگاه اتصال اشغال هستند. بعداً دوباره تلاش کنید.");
+      return;
+    }
+
+    if(err.type === "peer-unavailable"){
+      setStatus("منتظر آماده شدن گوشی اول...");
+      return;
+    }
+
+    setStatus("خطای اتصال: "+err.type);
+  });
+
+  peer.on("connection",conn=>{
+    attachDataConnection(conn);
+  });
+
+  peer.on("call",call=>{
+    pendingCall = call;
+    $("answerBtn").style.display = "block";
+    $("callStatus").textContent = "تماس ورودی؛ برای پاسخ دکمه را بزنید";
+  });
+
+  peer.on("disconnected",()=>{
+    setStatus("ارتباط با سرور قطع شد؛ در حال تلاش مجدد...");
+    try{peer.reconnect()}catch(e){}
+  });
+}
+
+function connectToHost(){
+  if(role !== "guest" || !peer || peer.destroyed) return;
+  if(dataConn && dataConn.open) return;
+  if(connecting) return;
+
+  connecting = true;
+
+  try{
+    const conn = peer.connect(hostId,{
+      reliable:true,
+      serialization:"json"
+    });
+
+    attachDataConnection(conn);
+
+    conn.on("open",()=>{
+      connecting = false;
+    });
+
+    conn.on("error",()=>{
+      connecting = false;
+    });
+
+  }catch(e){
+    connecting = false;
+  }
+}
+
+function attachDataConnection(conn){
+  dataConn = conn;
+
+  conn.on("open",()=>{
+    connecting = false;
+    setStatus("اتصال چت برقرار شد");
+    $("messageInput").disabled = false;
+    $("sendBtn").disabled = false;
+
+    if(retryTimer){
+      clearInterval(retryTimer);
+      retryTimer = null;
+    }
+
+    appendMessage("سیستم","اتصال برقرار شد",false);
+  });
+
+  conn.on("data",data=>{
+    if(data && data.type === "message"){
+      appendMessage("طرف مقابل",String(data.text || ""),false);
+    }
+  });
+
+  conn.on("close",()=>{
+    if(dataConn === conn) dataConn = null;
+    connecting = false;
+
+    $("messageInput").disabled = true;
+    $("sendBtn").disabled = true;
+    setStatus("چت قطع شد؛ در حال تلاش برای اتصال مجدد...");
+
+    if(role === "guest" && !retryTimer){
+      retryTimer = setInterval(connectToHost,4000);
+    }
+  });
+
+  conn.on("error",()=>{
+    connecting = false;
+  });
+}
+
+function appendMessage(who,text,mine){
+  const box = document.createElement("div");
+  box.className = "message"+(mine ? " mine" : "");
+
+  const name = document.createElement("div");
+  name.className = "who";
+  name.textContent = who;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  box.appendChild(name);
+  box.appendChild(bubble);
+
+  $("messages").appendChild(box);
+  $("messages").scrollTop = $("messages").scrollHeight;
 }
 
 function sendMessage(){
- const t=$("message").value.trim();
- if(!t)return;
+  const input = $("messageInput");
+  const text = input.value.trim();
 
- if(!conn || !conn.open){
-  alert("هنوز به طرف مقابل متصل نیستید");
-  return;
- }
+  if(!text || !dataConn || !dataConn.open) return;
 
- conn.send({type:"message",text:t});
- addMessage("من: "+t,true);
- $("message").value="";
+  dataConn.send({type:"message",text:text});
+  appendMessage("من",text,true);
+  input.value = "";
 }
 
-async function getMic(){
- if(!localStream){
-  localStream=await navigator.mediaDevices.getUserMedia({
-   audio:true,video:false
+$("messageInput").addEventListener("keydown",e=>{
+  if(e.key === "Enter") sendMessage();
+});
+
+async function getMicrophone(){
+  if(localStream && localStream.active) return localStream;
+
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    throw new Error("مرورگر یا اتصال امن HTTPS از میکروفون پشتیبانی نمی‌کند");
+  }
+
+  localStream = await navigator.mediaDevices.getUserMedia({
+    audio:true,
+    video:false
   });
- }
- return localStream;
+
+  return localStream;
+}
+
+function attachMediaCall(call){
+  currentCall = call;
+  pendingCall = null;
+
+  $("answerBtn").style.display = "none";
+  $("hangupBtn").disabled = false;
+  $("callStatus").textContent = "در حال برقراری تماس...";
+
+  call.on("stream",stream=>{
+    $("remoteAudio").srcObject = stream;
+    $("remoteAudio").play().then(()=>{
+      $("playAudioBtn").style.display = "none";
+    }).catch(()=>{
+      $("playAudioBtn").style.display = "block";
+    });
+
+    $("callStatus").textContent = "تماس صوتی برقرار است";
+  });
+
+  call.on("close",cleanupCall);
+
+  call.on("error",err=>{
+    console.log("Call error:",err);
+    $("callStatus").textContent = "خطا در تماس صوتی";
+  });
 }
 
 async function startCall(){
- try{
-  if(!otherPeer){
-   const id=prompt("شناسه Peer دوستت را وارد کن:");
-   if(!id)return;
-   otherPeer=id.trim();
+  if(!peer || peer.destroyed){
+    alert("اتصال هنوز آماده نیست");
+    return;
   }
 
-  const stream=await getMic();
-  currentCall=peer.call(otherPeer,stream);
-  handleCall(currentCall);
- }catch(e){
-  alert("دسترسی میکروفون ممکن نشد: "+e.message);
- }
+  try{
+    $("callStatus").textContent = "در حال دسترسی به میکروفون...";
+    const stream = await getMicrophone();
+    const target = role === "host" ? guestId : hostId;
+
+    const call = peer.call(target,stream);
+
+    if(!call){
+      $("callStatus").textContent = "شروع تماس ممکن نشد";
+      return;
+    }
+
+    attachMediaCall(call);
+
+  }catch(e){
+    alert("دسترسی به میکروفون ممکن نشد: "+e.message);
+    $("callStatus").textContent = "میکروفون در دسترس نیست";
+  }
 }
 
-async function answerIncomingCall(){
- try{
-  const stream=await getMic();
-  currentCall.answer(stream);
-  handleCall(currentCall);
- }catch(e){
-  alert("دسترسی میکروفون ممکن نشد: "+e.message);
- }
+async function answerCall(){
+  if(!pendingCall) return;
+
+  try{
+    const stream = await getMicrophone();
+    const call = pendingCall;
+    pendingCall = null;
+
+    call.answer(stream);
+    attachMediaCall(call);
+
+  }catch(e){
+    alert("برای پاسخ به تماس باید اجازه میکروفون بدهید: "+e.message);
+  }
 }
 
-function handleCall(call){
- call.on("stream",stream=>{
-  $("remoteAudio").srcObject=stream;
-  $("callStatus").textContent="تماس صوتی برقرار است";
-  $("muteBtn").disabled=false;
- });
-
- call.on("close",()=>{
-  $("remoteAudio").srcObject=null;
-  $("callStatus").textContent="تماس پایان یافت";
- });
-
- call.on("error",e=>{
-  $("callStatus").textContent="خطای تماس: "+e.message;
- });
+function cleanupCall(){
+  currentCall = null;
+  pendingCall = null;
+  $("remoteAudio").srcObject = null;
+  $("answerBtn").style.display = "none";
+  $("playAudioBtn").style.display = "none";
+  $("hangupBtn").disabled = true;
+  $("callStatus").textContent = "تماس پایان یافت";
 }
 
-function toggleMute(){
- if(!localStream)return;
- muted=!muted;
- localStream.getAudioTracks().forEach(t=>t.enabled=!muted);
- $("muteBtn").textContent=muted?"روشن کردن میکروفون":"قطع میکروفون";
+function hangup(){
+  if(currentCall){
+    currentCall.close();
+  }
+  if(pendingCall){
+    pendingCall.close();
+  }
+  cleanupCall();
 }
 
-function endCall(){
- if(currentCall)currentCall.close();
- currentCall=null;
-
- if(localStream){
-  localStream.getTracks().forEach(t=>t.stop());
-  localStream=null;
- }
-
- $("remoteAudio").srcObject=null;
- $("callStatus").textContent="تماس پایان یافت";
- $("muteBtn").disabled=true;
- muted=false;
- $("muteBtn").textContent="قطع میکروفون";
+function playRemoteAudio(){
+  $("remoteAudio").play().then(()=>{
+    $("playAudioBtn").style.display = "none";
+  }).catch(()=>{});
 }
 
-function leaveRoom(){
- endCall();
- if(conn)conn.close();
- if(peer)peer.destroy();
- conn=null;
- peer=null;
- $("chatPanel").style.display="none";
- $("connectPanel").style.display="block";
- $("connectionStatus").textContent="ارتباط قطع شد";
+function logout(){
+  if(retryTimer) clearInterval(retryTimer);
+  retryTimer = null;
+
+  hangup();
+
+  if(dataConn){
+    dataConn.close();
+    dataConn = null;
+  }
+
+  if(peer){
+    peer.destroy();
+    peer = null;
+  }
+
+  if(localStream){
+    localStream.getTracks().forEach(track=>track.stop());
+    localStream = null;
+  }
+
+  $("messages").innerHTML = "";
+  $("password").value = "";
+  $("chatPanel").style.display = "none";
+  $("loginPanel").style.display = "block";
+  $("messageInput").disabled = true;
+  $("sendBtn").disabled = true;
+  $("callBtn").disabled = true;
 }
 </script>
 </body>
