@@ -121,14 +121,19 @@ function startConnection(selectedRole){
   setStatus("این گوشی دوم است؛ دنبال گوشی اول می‌گردد...");
  }
 
- peer=new Peer(role==="host"?HOST:GUEST,{
-  debug:1,
+peer=new Peer(role==="host"?HOST:GUEST,{
+  host:"0.peerjs.com",
+  port:443,
+  path:"/",
+  secure:true,
+  debug:3,
+  pingInterval:5000,
   config:{
-   iceServers:[
-    {urls:"stun:stun.l.google.com:19302"}
-   ]
+    iceServers:[
+      {urls:"stun:stun.l.google.com:19302"}
+    ]
   }
- });
+});
 
  peer.on("open",()=>{
   if(role==="host"){
