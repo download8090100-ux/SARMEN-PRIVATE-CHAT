@@ -3,385 +3,372 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SARMEN PRIVATE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SARMEN PRIVATE CHAT</title>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#090d14;color:#fff;font-family:Tahoma,Arial;display:flex;justify-content:center;padding:15px}
-main{width:100%;max-width:500px;background:#151d2a;padding:20px;border-radius:18px;margin-top:25px}
-h1{text-align:center;color:#ed3949;letter-spacing:4px}
-input,button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:9px;font-size:15px}
-input{background:#080e18;color:white;border:1px solid #344156}
-button{background:#b92739;color:white;font-weight:bold;cursor:pointer}
+body{margin:0;background:#101116;color:#eee;font-family:Arial,sans-serif}
+.container{max-width:600px;margin:auto;padding:18px}
+header{text-align:center;padding:20px 0}
+.logo{font-size:34px;font-weight:bold;color:#e63946;letter-spacing:5px}
+.sub{color:#999;font-size:12px;letter-spacing:3px;margin-top:7px}
+.panel{background:#1b1d25;border:1px solid #30333e;border-radius:16px;padding:18px;margin:14px 0}
+input{width:100%;padding:14px;border-radius:9px;border:1px solid #444;background:#101116;color:white;font-size:16px;margin:8px 0}
+button{border:0;border-radius:9px;padding:13px 16px;background:#d92739;color:white;font-size:15px;font-weight:bold;cursor:pointer}
 button:disabled{opacity:.4}
-.alt{background:#34445b}
-.green{background:#14794e}
-.status{background:#080e18;padding:13px;border-radius:9px;margin:15px 0;text-align:center;font-size:13px;line-height:1.8}
-#rolePanel,#appPanel{display:none}
-#messages{height:280px;overflow:auto;background:#080e18;padding:10px;border-radius:10px;margin:15px 0}
-.msg{padding:10px;background:#26364b;border-radius:9px;margin:8px 0;overflow-wrap:anywhere}
-.mine{background:#8c2938}
-.small{font-size:12px;color:#aab5c7;text-align:center;line-height:1.8}
+.secondary{background:#343744}
+.row{display:flex;gap:9px;margin:10px 0}
+.row button{flex:1}
+#chat{height:330px;overflow-y:auto;background:#101116;border-radius:10px;padding:12px}
+.msg{padding:10px 12px;border-radius:12px;margin:8px 0;max-width:85%;background:#30333e;overflow-wrap:anywhere}
+.mine{background:#8e2431;margin-right:auto}
+.small{font-size:12px;color:#aaa}
+#status{color:#f0b84b;text-align:center;padding:10px;font-size:13px}
+#app{display:none}
+#remoteAudio{width:100%;margin-top:10px}
 </style>
 </head>
 <body>
-<main>
-<h1>SARMEN</h1>
-<p class="small">PRIVATE CHAT & VOICE</p>
+<div class="container">
 
-<section id="loginPanel">
-<input id="username" value="movsesian" placeholder="نام کاربری">
-<input id="password" type="11arsine11" placeholder="رمز عبور">
-<button onclick="login()">ورود به سایت</button>
+<header>
+  <div class="logo">SARMEN</div>
+  <div class="sub">PRIVATE CHAT & VOICE</div>
+</header>
+
+<section id="login" class="panel">
+  <h3>ورود به SARMEN</h3>
+  <p class="small">نام کاربری: movsesian</p>
+  <input id="password" type="password" placeholder="11arsine11">
+  <div class="row">
+    <button onclick="start('one')">گوشی اول</button>
+    <button class="secondary" onclick="start('two')">گوشی دوم</button>
+  </div>
+  <p class="small">هر دو نفر باید رمز یکسان وارد کنند و نقش متفاوت انتخاب کنند.</p>
 </section>
 
-<section id="rolePanel">
-<p class="small">نقش این گوشی را انتخاب کن</p>
-<button onclick="startConnection('host')">گوشی اول</button>
-<button class="alt" onclick="startConnection('guest')">گوشی دوم</button>
+<section id="app">
+  <div class="panel">
+    <div id="status">در حال اتصال...</div>
+    <div class="row">
+      <button id="micButton" onclick="enableMic()">فعال‌سازی میکروفون</button>
+      <button id="callButton" onclick="makeCall()" disabled>تماس صوتی</button>
+    </div>
+    <div class="row">
+      <button class="secondary" onclick="endCall()">قطع تماس</button>
+    </div>
+    <audio id="remoteAudio" autoplay playsinline controls></audio>
+  </div>
+
+  <div class="panel">
+    <h3>پیام‌های SARMEN</h3>
+    <div id="chat"></div>
+    <input id="message" placeholder="پیام خود را بنویسید..." onkeydown="if(event.key==='Enter')sendMessage()">
+    <button style="width:100%" onclick="sendMessage()">ارسال پیام</button>
+  </div>
 </section>
 
-<section id="appPanel">
-<div class="status" id="status">در حال اتصال...</div>
-<div id="messages"></div>
-<input id="msgInput" placeholder="پیام بنویس..." disabled>
-<button id="sendBtn" onclick="sendMessage()" disabled>ارسال پیام</button>
-
-<hr style="border-color:#344156;margin-top:20px">
-<p class="small">تماس صوتی دوطرفه</p>
-<button id="callBtn" class="green" onclick="makeCall()" disabled>شروع تماس صوتی</button>
-<button id="answerBtn" onclick="answerCall()" style="display:none">پاسخ به تماس</button>
-<button id="hangBtn" class="alt" onclick="hangup()" disabled>قطع تماس</button>
-<div class="status" id="callStatus">آماده تماس</div>
-<audio id="remoteAudio" autoplay playsinline></audio>
-<button id="audioBtn" class="alt" style="display:none" onclick="playAudio()">پخش صدای طرف مقابل</button>
-<button class="alt" onclick="location.reload()">خروج</button>
-</section>
-</main>
+</div>
 
 <script>
-// تنظیمات ورود
 const USERNAME = "movsesian";
-const PASSWORD = "11arsine11";
 
-// شناسه داخلی دو گوشی
-function hash(s){
- let h=2166136261;
- for(let i=0;i<s.length;i++){
-  h^=s.charCodeAt(i);
-  h=Math.imul(h,16777619);
- }
- return (h>>>0).toString(36);
+const SERVER = "sarmen-private-chat.ethiodeploy.app";
+const SERVER_PATH = "/peerjs";
+
+let peer = null;
+let connection = null;
+let mediaCall = null;
+let localStream = null;
+let myRole = "";
+let remoteRole = "";
+let remotePeerId = "";
+let reconnectTimer = null;
+let connecting = false;
+
+const statusBox = document.getElementById("status");
+const chatBox = document.getElementById("chat");
+const remoteAudio = document.getElementById("remoteAudio");
+
+function status(text) {
+  statusBox.textContent = text;
 }
 
-const key=hash(USERNAME.toLowerCase()+"|"+PASSWORD);
-const HOST="sarmen-"+key+"-host";
-const GUEST="sarmen-"+key+"-guest";
+function addMessage(text, mine, time) {
+  const div = document.createElement("div");
+  div.className = "msg" + (mine ? " mine" : "");
 
-let peer=null;
-let role=null;
-let conn=null;
-let localStream=null;
-let activeCall=null;
-let incomingCall=null;
-let retryTimer=null;
-let connecting=false;
-let attemptTimer=null;
+  const content = document.createElement("div");
+  content.textContent = text;
 
-const el=id=>document.getElementById(id);
+  const stamp = document.createElement("div");
+  stamp.className = "small";
+  stamp.textContent = time || new Date().toLocaleTimeString();
 
-function login(){
- const u=el("username").value.trim().toLowerCase();
- const p=el("password").value;
-
- if(u!==USERNAME.toLowerCase()||p!==PASSWORD){
-  alert("نام کاربری یا رمز اشتباه است");
-  return;
- }
-
- el("loginPanel").style.display="none";
- el("rolePanel").style.display="block";
+  div.appendChild(content);
+  div.appendChild(stamp);
+  chatBox.appendChild(div);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function setStatus(t){
- el("status").textContent=t;
+async function makeIds(password) {
+  const data = new TextEncoder().encode(USERNAME + "|" + password);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+
+  const hex = Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return {
+    one: "sarmen-" + hex.slice(0, 24) + "-one",
+    two: "sarmen-" + hex.slice(0, 24) + "-two"
+  };
 }
 
-function startConnection(selectedRole){
- if(peer)return;
+async function start(role) {
+  const password = document.getElementById("password").value;
 
- role=selectedRole;
- el("rolePanel").style.display="none";
- el("appPanel").style.display="block";
-
- if(role==="host"){
-  setStatus("این گوشی میزبان است؛ منتظر گوشی دوم...");
- }else{
-  setStatus("این گوشی دوم است؛ دنبال گوشی اول می‌گردد...");
- }
-
-peer=new Peer(role==="host"?HOST:GUEST,{
-  host:"0.peerjs.com",
-  port:443,
-  path:"/",
-  secure:true,
-  debug:3,
-  pingInterval:5000,
-  config:{
-    iceServers:[
-      {urls:"stun:stun.l.google.com:19302"}
-    ]
+  if (!password || password.length < 8) {
+    alert("رمز عبور باید حداقل ۸ کاراکتر باشد.");
+    return;
   }
+
+  if (!window.crypto || !crypto.subtle) {
+    alert("مرورگر از رمزنگاری امن پشتیبانی نمی‌کند.");
+    return;
+  }
+
+  myRole = role;
+  remoteRole = role === "one" ? "two" : "one";
+
+  const ids = await makeIds(password);
+  const myId = ids[myRole];
+  remotePeerId = ids[remoteRole];
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  status("در حال اتصال به سرور SARMEN...");
+
+  peer = new Peer(myId, {
+    host: SERVER,
+    port: 443,
+    path: SERVER_PATH,
+    secure: true,
+    debug: 1,
+    config: {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" }
+      ]
+    }
+  });
+
+  peer.on("open", () => {
+    status("به سرور وصل شدی؛ منتظر گوشی دیگر...");
+    document.getElementById("callButton").disabled = false;
+
+    if (myRole === "two") {
+      connectToFirst();
+    }
+  });
+
+  peer.on("connection", conn => {
+    setupConnection(conn);
+  });
+
+  peer.on("call", incomingCall => {
+    if (!localStream) {
+      mediaCall = incomingCall;
+      status("تماس ورودی؛ ابتدا میکروفون را فعال کن.");
+      return;
+    }
+    answerCall(incomingCall);
+  });
+
+  peer.on("disconnected", () => {
+    status("ارتباط با سرور قطع شد؛ تلاش برای اتصال مجدد...");
+    if (!peer.destroyed) {
+      peer.reconnect();
+    }
+  });
+
+  peer.on("error", err => {
+    console.error(err);
+    status("خطای سرور: " + err.type);
+
+    if (err.type === "unavailable-id") {
+      status("این نقش قبلاً در دستگاه دیگری فعال شده است.");
+    }
+  });
+}
+
+function connectToFirst() {
+  if (!peer || peer.destroyed || connection || connecting) return;
+
+  connecting = true;
+  status("در حال پیدا کردن گوشی اول...");
+
+  const conn = peer.connect(remotePeerId, {
+    reliable: true
+  });
+
+  setupConnection(conn);
+
+  conn.on("open", () => {
+    connecting = false;
+  });
+
+  conn.on("error", () => {
+    connecting = false;
+  });
+}
+
+function setupConnection(conn) {
+  if (connection && connection.open) return;
+
+  connection = conn;
+
+  conn.on("open", () => {
+    connecting = false;
+    status("دو گوشی به هم متصل شدند.");
+    addMessage("ارتباط برقرار شد.", false);
+  });
+
+  conn.on("data", data => {
+    if (data && data.type === "chat") {
+      addMessage(data.text, false, data.time);
+    }
+  });
+
+  conn.on("close", () => {
+    connection = null;
+    connecting = false;
+    status("ارتباط چت قطع شد.");
+
+    if (myRole === "two") {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = setTimeout(connectToFirst, 3000);
+    }
+  });
+
+  conn.on("error", err => {
+    console.error(err);
+    connecting = false;
+    status("خطا در ارتباط چت.");
+  });
+}
+
+function sendMessage() {
+  const input = document.getElementById("message");
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  if (!connection || !connection.open) {
+    alert("هنوز گوشی دیگر متصل نشده است.");
+    return;
+  }
+
+  const time = new Date().toLocaleTimeString();
+
+  connection.send({
+    type: "chat",
+    text,
+    time
+  });
+
+  addMessage(text, true, time);
+  input.value = "";
+}
+
+async function enableMic() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: false
+    });
+
+    document.getElementById("micButton").textContent = "میکروفون فعال است";
+    status("میکروفون فعال شد.");
+
+    if (mediaCall) {
+      const incoming = mediaCall;
+      mediaCall = null;
+      answerCall(incoming);
+    }
+  } catch (err) {
+    alert("دسترسی به میکروفون داده نشد: " + err.message);
+  }
+}
+
+function makeCall() {
+  if (!peer || !peer.open) {
+    alert("سرور هنوز متصل نیست.");
+    return;
+  }
+
+  if (!localStream) {
+    alert("اول میکروفون را فعال کن.");
+    return;
+  }
+
+  if (mediaCall) {
+    alert("تماس در حال حاضر برقرار است.");
+    return;
+  }
+
+  status("در حال تماس با گوشی دیگر...");
+
+  mediaCall = peer.call(remotePeerId, localStream);
+  setupMediaCall(mediaCall);
+}
+
+function answerCall(call) {
+  if (!localStream) return;
+
+  call.answer(localStream);
+  mediaCall = call;
+  setupMediaCall(call);
+}
+
+function setupMediaCall(call) {
+  call.on("stream", stream => {
+    remoteAudio.srcObject = stream;
+    remoteAudio.play().catch(() => {
+      status("برای شنیدن صدا، پخش صدا را لمس کن.");
+    });
+    status("تماس صوتی برقرار شد.");
+  });
+
+  call.on("close", () => {
+    mediaCall = null;
+    remoteAudio.srcObject = null;
+    status("تماس پایان یافت.");
+  });
+
+  call.on("error", err => {
+    console.error(err);
+    status("خطا در تماس صوتی.");
+  });
+}
+
+function endCall() {
+  if (mediaCall) {
+    mediaCall.close();
+    mediaCall = null;
+  }
+
+  remoteAudio.srcObject = null;
+  status("تماس قطع شد.");
+}
+
+window.addEventListener("beforeunload", () => {
+  clearTimeout(reconnectTimer);
+  if (mediaCall) mediaCall.close();
+  if (connection) connection.close();
+  if (peer) peer.destroy();
 });
-
- peer.on("open",()=>{
-  if(role==="host"){
-   setStatus("گوشی اول آماده است؛ حالا گوشی دوم وارد شود.");
-  }else{
-   setStatus("گوشی دوم آماده است؛ در حال پیدا کردن گوشی اول...");
-   connectHost();
-   retryTimer=setInterval(connectHost,4000);
-  }
- });
-
- peer.on("connection",c=>{
-  if(role==="host"){
-   attachConnection(c);
-  }
- });
-
- peer.on("call",call=>{
-  incomingCall=call;
-  el("answerBtn").style.display="block";
-  el("callStatus").textContent="تماس ورودی؛ پاسخ بده";
- });
-
- peer.on("error",e=>{
-  console.log("PeerJS error:",e.type,e);
-  connecting=false;
-
-  if(attemptTimer){
-   clearTimeout(attemptTimer);
-   attemptTimer=null;
-  }
-
-  if(e.type==="unavailable-id"){
-   setStatus("این نقش قبلاً در یک گوشی دیگر فعال شده است. نقش گوشی را بررسی کن.");
-  }else if(e.type==="peer-unavailable"){
-   setStatus("گوشی اول هنوز آنلاین نیست؛ دوباره تلاش می‌کنم...");
-  }else{
-   setStatus("خطای اتصال: "+e.type);
-  }
- });
-
- peer.on("disconnected",()=>{
-  setStatus("ارتباط با سرور قطع شد؛ تلاش مجدد...");
-  if(peer&&!peer.destroyed)peer.reconnect();
- });
-}
-
-function connectHost(){
- if(role!=="guest"||!peer||peer.destroyed)return;
- if(conn&&conn.open)return;
- if(connecting)return;
-
- connecting=true;
- setStatus("در حال پیدا کردن گوشی اول...");
-
- try{
-  const c=peer.connect(HOST,{
-   reliable:true,
-   serialization:"json"
-  });
-
-  attachConnection(c);
-
-  attemptTimer=setTimeout(()=>{
-   if(!c.open){
-    connecting=false;
-    try{c.close()}catch(e){}
-   }
-  },7000);
-
- }catch(e){
-  connecting=false;
- }
-}
-
-function attachConnection(c){
- if(conn&&conn!==c&&conn.open){
-  c.close();
-  return;
- }
-
- conn=c;
-
- c.on("open",()=>{
-  connecting=false;
-  if(attemptTimer){
-   clearTimeout(attemptTimer);
-   attemptTimer=null;
-  }
-
-  if(retryTimer){
-   clearInterval(retryTimer);
-   retryTimer=null;
-  }
-
-  setStatus("چت دوطرفه متصل شد");
-  el("msgInput").disabled=false;
-  el("sendBtn").disabled=false;
-  el("callBtn").disabled=false;
-  addMessage("سیستم","اتصال برقرار شد",false);
- });
-
- c.on("data",data=>{
-  if(data&&data.type==="msg"){
-   addMessage("طرف مقابل",String(data.text||""),false);
-  }
- });
-
- c.on("close",()=>{
-  if(conn===c)conn=null;
-  connecting=false;
-  el("msgInput").disabled=true;
-  el("sendBtn").disabled=true;
-  el("callBtn").disabled=true;
-  setStatus("چت قطع شد");
-
-  if(role==="guest"&&!retryTimer){
-   retryTimer=setInterval(connectHost,4000);
-  }
- });
-
- c.on("error",()=>{
-  connecting=false;
- });
-}
-
-function addMessage(name,text,mine){
- const d=document.createElement("div");
- d.className="msg"+(mine?" mine":"");
- const b=document.createElement("b");
- b.textContent=name+": ";
- d.appendChild(b);
- d.appendChild(document.createTextNode(text));
- el("messages").appendChild(d);
- el("messages").scrollTop=el("messages").scrollHeight;
-}
-
-function sendMessage(){
- const input=el("msgInput");
- const text=input.value.trim();
-
- if(!text||!conn||!conn.open)return;
-
- conn.send({type:"msg",text});
- addMessage("من",text,true);
- input.value="";
-}
-
-el("msgInput").addEventListener("keydown",e=>{
- if(e.key==="Enter")sendMessage();
-});
-
-async function getMicrophone(){
- if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-  throw new Error("مرورگر به میکروفون دسترسی ندارد");
- }
-
- if(!localStream||!localStream.active){
-  localStream=await navigator.mediaDevices.getUserMedia({
-   audio:true,
-   video:false
-  });
- }
- return localStream;
-}
-
-function setupCall(call){
- activeCall=call;
- incomingCall=null;
- el("answerBtn").style.display="none";
- el("hangBtn").disabled=false;
- el("callStatus").textContent="در حال اتصال صوتی...";
-
- call.on("stream",stream=>{
-  const audio=el("remoteAudio");
-  audio.srcObject=stream;
-
-  audio.play().then(()=>{
-   el("audioBtn").style.display="none";
-  }).catch(()=>{
-   el("audioBtn").style.display="block";
-  });
-
-  el("callStatus").textContent="تماس صوتی برقرار است";
- });
-
- call.on("close",cleanCall);
-
- call.on("error",e=>{
-  console.log("Call error:",e);
-  el("callStatus").textContent="خطا در تماس صوتی";
- });
-}
-
-async function makeCall(){
- if(!peer||peer.destroyed){
-  alert("اتصال آماده نیست");
-  return;
- }
-
- try{
-  const stream=await getMicrophone();
-  const target=role==="host"?GUEST:HOST;
-  const call=peer.call(target,stream);
-
-  if(!call)throw new Error("تماس شروع نشد");
-
-  setupCall(call);
-
- }catch(e){
-  alert("خطای تماس: "+e.message);
- }
-}
-
-async function answerCall(){
- if(!incomingCall)return;
-
- try{
-  const stream=await getMicrophone();
-  const call=incomingCall;
-  call.answer(stream);
-  setupCall(call);
- }catch(e){
-  alert("خطای میکروفون: "+e.message);
- }
-}
-
-function cleanCall(){
- activeCall=null;
- incomingCall=null;
- el("remoteAudio").srcObject=null;
- el("hangBtn").disabled=true;
- el("answerBtn").style.display="none";
- el("audioBtn").style.display="none";
- el("callStatus").textContent="تماس پایان یافت";
-}
-
-function hangup(){
- if(activeCall)activeCall.close();
- if(incomingCall)incomingCall.close();
- cleanCall();
-}
-
-function playAudio(){
- el("remoteAudio").play().then(()=>{
-  el("audioBtn").style.display="none";
- }).catch(()=>{});
-}
 </script>
 </body>
 </html>
