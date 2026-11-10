@@ -5,177 +5,279 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SARMEN PRIVATE CHAT</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;
- background:#090909;
- color:#fff;
+ margin:0;background:#080808;color:white;
  font-family:Tahoma,Arial,sans-serif;
- min-height:100vh;
- display:flex;
- align-items:center;
- justify-content:center;
 }
-.container{
- width:95%;
- max-width:480px;
- background:#151515;
- border:1px solid #333;
- border-radius:18px;
- padding:25px;
- box-shadow:0 0 35px #ff000022;
+.app{
+ width:100%;max-width:520px;margin:auto;
+ min-height:100vh;padding:20px;
 }
-.logo{
- text-align:center;
- font-size:29px;
- font-weight:bold;
- letter-spacing:3px;
- color:#ff2020;
- margin:12px 0;
+header{text-align:center;padding:22px}
+.logo{font-size:32px;color:#ff2424;font-weight:bold;letter-spacing:4px}
+.sub{font-size:11px;color:#777;margin-top:9px}
+.panel{
+ background:#151515;border:1px solid #333;
+ border-radius:14px;padding:17px;margin-bottom:15px;
 }
-.subtitle{
- text-align:center;
- color:#888;
- font-size:12px;
- margin-bottom:30px;
-}
+h3{margin-top:0;color:#ff3535}
 input{
- width:100%;
- padding:15px;
- margin:9px 0;
- background:#080808;
- color:white;
- border:1px solid #383838;
- border-radius:9px;
- outline:none;
+ width:100%;padding:14px;margin:7px 0;
+ border:1px solid #393939;border-radius:8px;
+ background:#090909;color:white;font-size:15px;
 }
-input:focus{border-color:#ed2525}
 button{
- width:100%;
- padding:14px;
- margin-top:12px;
- background:#d71920;
- color:white;
- border:0;
- border-radius:9px;
- font-size:15px;
- cursor:pointer;
- font-weight:bold;
+ border:0;border-radius:9px;padding:14px;
+ background:#d71920;color:white;font-size:15px;
+ font-weight:bold;cursor:pointer;
 }
-button:hover{background:#ff3030}
-#chat{display:none}
-.messages{
- height:330px;
- overflow-y:auto;
- background:#090909;
- border:1px solid #292929;
- border-radius:10px;
- padding:12px;
- margin-bottom:12px;
+button:disabled{opacity:.4}
+.full{width:100%;margin-top:9px}
+.secondary{background:#303030}
+.green{background:#146d43}
+.status{text-align:center;color:#aaa;font-size:12px;padding:8px}
+#chatPanel{display:none}
+#messages{
+ height:310px;overflow:auto;background:#090909;
+ border:1px solid #303030;border-radius:10px;
+ padding:10px;
 }
-.message{
- background:#252525;
- padding:11px;
- border-radius:9px;
- margin:8px 0;
+.msg{
+ background:#292929;padding:11px;
+ margin:8px 0;border-radius:10px;
  overflow-wrap:anywhere;
 }
-.message.mine{
- background:#5d1111;
- text-align:left;
-}
-.status{
- text-align:center;
- color:#aaa;
- font-size:12px;
- margin:10px;
-}
-.footer{
- text-align:center;
- color:#555;
- font-size:10px;
- margin-top:22px;
-}
-#loginError{color:#ff5555;font-size:12px}
+.mine{background:#641818;text-align:left}
+.controls{display:flex;gap:8px}
+.controls button{flex:1}
+.footer{text-align:center;color:#555;font-size:10px;padding:20px}
 </style>
 </head>
 
 <body>
-<div class="container">
+<div class="app">
 
-<div class="logo">SARMEN</div>
-<div class="subtitle">PRIVATE COMMUNICATION SYSTEM</div>
+<header>
+ <div class="logo">SARMEN</div>
+ <div class="sub">PRIVATE CHAT & VOICE CALL</div>
+</header>
 
-<div id="login">
-<h3>ورود خصوصی</h3>
-<input id="username" placeholder="نام کاربری">
-<input id="password" type="password" placeholder="رمز عبور">
-<button onclick="login()">ورود به سیستم</button>
-<div id="loginError"></div>
+<div class="panel" id="connectPanel">
+ <h3>ورود به اتاق خصوصی</h3>
+ <input id="room" placeholder="کد اتاق مشترک">
+ <button class="full" onclick="connectRoom()">ورود به اتاق</button>
+ <div class="status" id="status">آماده اتصال</div>
+ <div class="status">هر دو نفر باید دقیقاً یک کد اتاق وارد کنند.</div>
 </div>
 
-<div id="chat">
-<h3>اتاق گفتگوی خصوصی</h3>
-<div class="status">SARMEN PRIVATE ROOM</div>
+<div id="chatPanel">
+ <div class="panel">
+  <h3>وضعیت ارتباط</h3>
+  <div class="status" id="connectionStatus">در انتظار اتصال طرف مقابل</div>
+  <div class="controls">
+   <button id="callBtn" onclick="startCall()" disabled>تماس صوتی</button>
+   <button class="secondary" onclick="endCall()">قطع تماس</button>
+  </div>
+  <audio id="remoteAudio" autoplay playsinline></audio>
+  <div class="status" id="callStatus">تماس برقرار نشده</div>
+  <button class="full secondary" id="muteBtn" onclick="toggleMute()" disabled>قطع میکروفون</button>
+ </div>
 
-<div class="messages" id="messages">
-<div class="status">به اتاق گفتگو خوش آمدید</div>
+ <div class="panel">
+  <h3>پیام‌ها</h3>
+  <div id="messages">
+   <div class="status">به SARMEN خوش آمدید</div>
+  </div>
+  <input id="message" placeholder="پیام خود را بنویسید..."
+   onkeydown="if(event.key==='Enter')sendMessage()">
+  <button class="full" onclick="sendMessage()">ارسال پیام</button>
+ </div>
+
+ <button class="full secondary" onclick="leaveRoom()">خروج از اتاق</button>
 </div>
 
-<input id="messageInput" placeholder="پیام خود را بنویسید..."
-onkeydown="if(event.key==='Enter')sendMessage()">
-
-<button onclick="sendMessage()">ارسال پیام</button>
-<button onclick="logout()" style="background:#333">خروج</button>
-</div>
-
-<div class="footer">SARMEN © 2026 — PRIVATE SYSTEM</div>
+<div class="footer">SARMEN © 2026</div>
 </div>
 
 <script>
-function login(){
- const user=document.getElementById("username").value.trim();
- const pass=document.getElementById("password").value;
+let peer=null;
+let conn=null;
+let currentCall=null;
+let localStream=null;
+let muted=false;
+let otherPeer=null;
+let roomCode="";
 
- if(!user || !pass){
-  document.getElementById("loginError").textContent=
-  "نام کاربری و رمز عبور را وارد کنید";
+const $=id=>document.getElementById(id);
+
+function setStatus(t){$("status").textContent=t}
+
+function addMessage(t,mine){
+ const d=document.createElement("div");
+ d.className="msg"+(mine?" mine":"");
+ d.textContent=t;
+ $("messages").appendChild(d);
+ $("messages").scrollTop=$("messages").scrollHeight;
+}
+
+function connectRoom(){
+ roomCode=$("room").value.trim();
+
+ if(!/^[a-zA-Z0-9_-]{3,30}$/.test(roomCode)){
+  setStatus("کد اتاق باید حداقل ۳ حرف یا عدد باشد");
   return;
  }
 
- // ورود آزمایشی؛ احراز هویت واقعی در سرور پیاده‌سازی می‌شود.
- if(user.length < 3 || pass.length < 6){
-  document.getElementById("loginError").textContent=
-  "نام کاربری حداقل ۳ و رمز حداقل ۶ کاراکتر باشد";
-  return;
- }
+ $("connectPanel").style.display="none";
+ $("chatPanel").style.display="block";
+ setStatus("در حال اتصال...");
 
- document.getElementById("login").style.display="none";
- document.getElementById("chat").style.display="block";
+ // اتاق از طریق یک شناسه مشترک ساخته می‌شود.
+ const myId="sarmen-"+roomCode+"-"+Math.random().toString(36).slice(2,10);
+ peer=new Peer(myId);
+
+ peer.on("open",()=>{
+  $("connectionStatus").textContent="شناسه شما آماده است";
+  $("callBtn").disabled=false;
+  $("callStatus").textContent="برای تماس، طرف مقابل باید شناسه خود را به شما بدهد";
+ });
+
+ peer.on("connection",c=>{
+  conn=c;
+  setupConnection();
+ });
+
+ peer.on("call",call=>{
+  currentCall=call;
+  answerIncomingCall();
+ });
+
+ peer.on("error",e=>{
+  $("connectionStatus").textContent="خطا: "+e.type;
+ });
+
+ $("connectionStatus").textContent=
+ "شناسه شما: "+myId;
+}
+
+function setupConnection(){
+ if(!conn)return;
+
+ conn.on("open",()=>{
+  $("connectionStatus").textContent="چت متصل شد";
+ });
+
+ conn.on("data",data=>{
+  if(data.type==="message")addMessage("دوست: "+data.text,false);
+ });
+
+ conn.on("close",()=>{
+  $("connectionStatus").textContent="ارتباط قطع شد";
+ });
 }
 
 function sendMessage(){
- const input=document.getElementById("messageInput");
- const value=input.value.trim();
+ const t=$("message").value.trim();
+ if(!t)return;
 
- if(!value)return;
+ if(!conn || !conn.open){
+  alert("هنوز به طرف مقابل متصل نیستید");
+  return;
+ }
 
- const div=document.createElement("div");
- div.className="message mine";
- div.textContent=value;
-
- document.getElementById("messages").appendChild(div);
- input.value="";
-
- const box=document.getElementById("messages");
- box.scrollTop=box.scrollHeight;
+ conn.send({type:"message",text:t});
+ addMessage("من: "+t,true);
+ $("message").value="";
 }
 
-function logout(){
- document.getElementById("chat").style.display="none";
- document.getElementById("login").style.display="block";
+async function getMic(){
+ if(!localStream){
+  localStream=await navigator.mediaDevices.getUserMedia({
+   audio:true,video:false
+  });
+ }
+ return localStream;
+}
+
+async function startCall(){
+ try{
+  if(!otherPeer){
+   const id=prompt("شناسه Peer دوستت را وارد کن:");
+   if(!id)return;
+   otherPeer=id.trim();
+  }
+
+  const stream=await getMic();
+  currentCall=peer.call(otherPeer,stream);
+  handleCall(currentCall);
+ }catch(e){
+  alert("دسترسی میکروفون ممکن نشد: "+e.message);
+ }
+}
+
+async function answerIncomingCall(){
+ try{
+  const stream=await getMic();
+  currentCall.answer(stream);
+  handleCall(currentCall);
+ }catch(e){
+  alert("دسترسی میکروفون ممکن نشد: "+e.message);
+ }
+}
+
+function handleCall(call){
+ call.on("stream",stream=>{
+  $("remoteAudio").srcObject=stream;
+  $("callStatus").textContent="تماس صوتی برقرار است";
+  $("muteBtn").disabled=false;
+ });
+
+ call.on("close",()=>{
+  $("remoteAudio").srcObject=null;
+  $("callStatus").textContent="تماس پایان یافت";
+ });
+
+ call.on("error",e=>{
+  $("callStatus").textContent="خطای تماس: "+e.message;
+ });
+}
+
+function toggleMute(){
+ if(!localStream)return;
+ muted=!muted;
+ localStream.getAudioTracks().forEach(t=>t.enabled=!muted);
+ $("muteBtn").textContent=muted?"روشن کردن میکروفون":"قطع میکروفون";
+}
+
+function endCall(){
+ if(currentCall)currentCall.close();
+ currentCall=null;
+
+ if(localStream){
+  localStream.getTracks().forEach(t=>t.stop());
+  localStream=null;
+ }
+
+ $("remoteAudio").srcObject=null;
+ $("callStatus").textContent="تماس پایان یافت";
+ $("muteBtn").disabled=true;
+ muted=false;
+ $("muteBtn").textContent="قطع میکروفون";
+}
+
+function leaveRoom(){
+ endCall();
+ if(conn)conn.close();
+ if(peer)peer.destroy();
+ conn=null;
+ peer=null;
+ $("chatPanel").style.display="none";
+ $("connectPanel").style.display="block";
+ $("connectionStatus").textContent="ارتباط قطع شد";
 }
 </script>
 </body>
