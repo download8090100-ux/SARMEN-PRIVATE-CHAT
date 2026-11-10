@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SARMEN PRIVATE CHAT</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:#090909;
+ color:#fff;
+ font-family:Tahoma,Arial,sans-serif;
+ min-height:100vh;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+}
+.container{
+ width:95%;
+ max-width:480px;
+ background:#151515;
+ border:1px solid #333;
+ border-radius:18px;
+ padding:25px;
+ box-shadow:0 0 35px #ff000022;
+}
+.logo{
+ text-align:center;
+ font-size:29px;
+ font-weight:bold;
+ letter-spacing:3px;
+ color:#ff2020;
+ margin:12px 0;
+}
+.subtitle{
+ text-align:center;
+ color:#888;
+ font-size:12px;
+ margin-bottom:30px;
+}
+input{
+ width:100%;
+ padding:15px;
+ margin:9px 0;
+ background:#080808;
+ color:white;
+ border:1px solid #383838;
+ border-radius:9px;
+ outline:none;
+}
+input:focus{border-color:#ed2525}
+button{
+ width:100%;
+ padding:14px;
+ margin-top:12px;
+ background:#d71920;
+ color:white;
+ border:0;
+ border-radius:9px;
+ font-size:15px;
+ cursor:pointer;
+ font-weight:bold;
+}
+button:hover{background:#ff3030}
+#chat{display:none}
+.messages{
+ height:330px;
+ overflow-y:auto;
+ background:#090909;
+ border:1px solid #292929;
+ border-radius:10px;
+ padding:12px;
+ margin-bottom:12px;
+}
+.message{
+ background:#252525;
+ padding:11px;
+ border-radius:9px;
+ margin:8px 0;
+ overflow-wrap:anywhere;
+}
+.message.mine{
+ background:#5d1111;
+ text-align:left;
+}
+.status{
+ text-align:center;
+ color:#aaa;
+ font-size:12px;
+ margin:10px;
+}
+.footer{
+ text-align:center;
+ color:#555;
+ font-size:10px;
+ margin-top:22px;
+}
+#loginError{color:#ff5555;font-size:12px}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="logo">SARMEN</div>
+<div class="subtitle">PRIVATE COMMUNICATION SYSTEM</div>
+
+<div id="login">
+<h3>ورود خصوصی</h3>
+<input id="username" placeholder="نام کاربری">
+<input id="password" type="password" placeholder="رمز عبور">
+<button onclick="login()">ورود به سیستم</button>
+<div id="loginError"></div>
+</div>
+
+<div id="chat">
+<h3>اتاق گفتگوی خصوصی</h3>
+<div class="status">SARMEN PRIVATE ROOM</div>
+
+<div class="messages" id="messages">
+<div class="status">به اتاق گفتگو خوش آمدید</div>
+</div>
+
+<input id="messageInput" placeholder="پیام خود را بنویسید..."
+onkeydown="if(event.key==='Enter')sendMessage()">
+
+<button onclick="sendMessage()">ارسال پیام</button>
+<button onclick="logout()" style="background:#333">خروج</button>
+</div>
+
+<div class="footer">SARMEN © 2026 — PRIVATE SYSTEM</div>
+</div>
+
+<script>
+function login(){
+ const user=document.getElementById("username").value.trim();
+ const pass=document.getElementById("password").value;
+
+ if(!user || !pass){
+  document.getElementById("loginError").textContent=
+  "نام کاربری و رمز عبور را وارد کنید";
+  return;
+ }
+
+ // ورود آزمایشی؛ احراز هویت واقعی در سرور پیاده‌سازی می‌شود.
+ if(user.length < 3 || pass.length < 6){
+  document.getElementById("loginError").textContent=
+  "نام کاربری حداقل ۳ و رمز حداقل ۶ کاراکتر باشد";
+  return;
+ }
+
+ document.getElementById("login").style.display="none";
+ document.getElementById("chat").style.display="block";
+}
+
+function sendMessage(){
+ const input=document.getElementById("messageInput");
+ const value=input.value.trim();
+
+ if(!value)return;
+
+ const div=document.createElement("div");
+ div.className="message mine";
+ div.textContent=value;
+
+ document.getElementById("messages").appendChild(div);
+ input.value="";
+
+ const box=document.getElementById("messages");
+ box.scrollTop=box.scrollHeight;
+}
+
+function logout(){
+ document.getElementById("chat").style.display="none";
+ document.getElementById("login").style.display="block";
+}
+</script>
+</body>
+</html>
